@@ -45,4 +45,9 @@
     makeDeck,
     shuffle
   };
+
+  // Shared table size constant (also defined on Poker.Game for the
+  // single-player engine); kept here too so pages that only need rendering
+  // helpers (e.g. the online multiplayer client) don't have to load game.js.
+  Poker.NUM_SEATS = Poker.NUM_SEATS || 6;
 })(window.Poker = window.Poker || {});

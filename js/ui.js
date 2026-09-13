@@ -113,10 +113,16 @@
     chip.style.top = cy + "px";
   }
 
-  function renderSeats(game, winningCardIdsBySeat) {
+  function renderSeats(game, winningCardIdsBySeat, mySeat) {
+    if (mySeat === undefined) mySeat = 0;
     for (let i = 0; i < Poker.NUM_SEATS; i++) {
       const p = game.players[i];
       const seatEl = document.getElementById("seat-" + i);
+      if (!p) {
+        seatEl.classList.add("eliminated");
+        seatEl.classList.remove("folded", "active");
+        continue;
+      }
       seatEl.classList.toggle("eliminated", !!p.eliminated);
       seatEl.classList.toggle("folded", !!p.folded && !p.eliminated);
       seatEl.classList.toggle("active", game.currentPlayerIndex === i && game.handInProgress);
@@ -135,8 +141,8 @@
       }
 
       const winSet = winningCardIdsBySeat ? winningCardIdsBySeat[i] : null;
-      if (i === 0) {
-        renderSeatCards("seat-cards-0", { holeCards: [] }, false, null);
+      if (i === mySeat) {
+        renderSeatCards("seat-cards-" + i, { holeCards: [] }, false, null);
       } else {
         const reveal = game.stage === "showdown" && !p.folded;
         renderSeatCards("seat-cards-" + i, p, reveal, winSet);
@@ -144,9 +150,15 @@
     }
   }
 
-  function renderMyCards(game, winningCardIds) {
+  function renderMyCards(game, winningCardIds, mySeat) {
+    if (mySeat === undefined) mySeat = 0;
     const container = document.getElementById("my-cards");
-    const me = game.players[0];
+    const me = game.players[mySeat];
+    if (!me) {
+      container.innerHTML = "";
+      container.dataset.count = "0";
+      return;
+    }
     const count = me.holeCards.length;
     const prevCount = Number(container.dataset.count || 0);
     if (count !== prevCount || container.dataset.dirty === "1") {
@@ -171,13 +183,13 @@
     }
   }
 
-  function renderAll(game) {
+  function renderAll(game, mySeat) {
     renderStageLabel(game);
     renderCommunity(game);
     renderPot(game);
     renderDealerChip(game);
-    renderSeats(game);
-    renderMyCards(game);
+    renderSeats(game, null, mySeat);
+    renderMyCards(game, null, mySeat);
   }
 
   function markDirty() {

@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>Hold'em Royale &mdash; Play Online</title>
+<link rel="stylesheet" href="css/styles.css">
+<link rel="stylesheet" href="css/online.css">
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <div class="brand"><a href="index.html" class="brand-link">&#9824; Hold&rsquo;em <span class="gold">Royale</span></a></div>
+      <div class="topbar-actions">
+        <span class="conn-badge" id="conn-badge">Connecting&hellip;</span>
+        <button class="btn" id="btn-how-to-play">How to Play</button>
+        <a class="btn" href="index.html">Play vs Computer</a>
+      </div>
+    </header>
+
+    <!-- ENTRY: create or join a room -->
+    <main class="online-panel" id="panel-entry">
+      <div class="entry-cards">
+        <section class="entry-card">
+          <h2>Create a Room</h2>
+          <p class="entry-hint">Set up a private table and invite friends with a link.</p>
+          <label>Your name
+            <input type="text" id="create-name" maxlength="20" placeholder="Your display name">
+          </label>
+          <label>Starting chips
+            <input type="number" id="create-stack" value="10000" min="500" step="500">
+          </label>
+          <div class="blind-row">
+            <label>Small blind
+              <input type="number" id="create-sb" value="50" min="1" step="5">
+            </label>
+            <label>Big blind
+              <input type="number" id="create-bb" value="100" min="2" step="10">
+            </label>
+          </div>
+          <button class="btn btn-gold entry-submit" id="btn-create-room">Create Room</button>
+        </section>
+
+        <section class="entry-card">
+          <h2>Join a Room</h2>
+          <p class="entry-hint">Enter the room code or open the invite link a friend sent you.</p>
+          <label>Your name
+            <input type="text" id="join-name" maxlength="20" placeholder="Your display name">
+          </label>
+          <label>Room code
+            <input type="text" id="join-code" maxlength="8" placeholder="ABCD1234" autocapitalize="characters">
+          </label>
+          <button class="btn btn-gold entry-submit" id="btn-join-room">Join Room</button>
+        </section>
+      </div>
+      <p class="entry-error" id="entry-error"></p>
+    </main>
+
+    <!-- LOBBY: room created/joined, waiting to start -->
+    <main class="online-panel hidden" id="panel-lobby">
+      <div class="lobby-card">
+        <h2>Room <span class="gold" id="lobby-code">--------</span></h2>
+        <p class="entry-hint">Share this link so friends can join instantly:</p>
+        <div class="invite-row">
+          <input type="text" id="invite-link" readonly>
+          <button class="btn btn-gold" id="btn-copy-link">Copy Link</button>
+        </div>
+        <div class="lobby-config" id="lobby-config"></div>
+        <h3>Players</h3>
+        <ul class="lobby-players" id="lobby-players"></ul>
+        <button class="btn btn-gold entry-submit hidden" id="btn-start-game">Start Game</button>
+        <p class="entry-hint" id="lobby-wait-msg">Waiting for the host to start the game&hellip;</p>
+        <button class="btn" id="btn-leave-lobby">Leave Room</button>
+      </div>
+    </main>
+
+    <!-- TABLE: the live game -->
+    <main class="table-area hidden" id="panel-table">
+      <div class="table-oval" id="table-oval">
+        <div class="rail"></div>
+        <div class="felt"></div>
+
+        <div class="center-area">
+          <div class="stage-label" id="stage-label">Preflop</div>
+          <div class="community-cards" id="community-cards"></div>
+          <div class="pot-display" id="pot-display">Pot: 0</div>
+          <div class="turn-timer hidden" id="turn-timer"></div>
+        </div>
+
+        <div class="dealer-chip" id="dealer-chip" style="display:none;">D</div>
+
+        <div class="seat" data-seat="0" id="seat-0">
+          <div class="seat-cards" id="seat-cards-0"></div>
+          <div class="seat-box">
+            <div class="seat-name" id="seat-name-0">&nbsp;</div>
+            <div class="seat-stack" id="seat-stack-0">0</div>
+            <div class="seat-status" id="seat-status-0"></div>
+          </div>
+          <div class="seat-bet hidden" id="seat-bet-0"></div>
+        </div>
+        <div class="seat" data-seat="1" id="seat-1">
+          <div class="seat-cards" id="seat-cards-1"></div>
+          <div class="seat-box">
+            <div class="seat-name" id="seat-name-1">&nbsp;</div>
+            <div class="seat-stack" id="seat-stack-1">0</div>
+            <div class="seat-status" id="seat-status-1"></div>
+          </div>
+          <div class="seat-bet hidden" id="seat-bet-1"></div>
+        </div>
+        <div class="seat" data-seat="2" id="seat-2">
+          <div class="seat-cards" id="seat-cards-2"></div>
+          <div class="seat-box">
+            <div class="seat-name" id="seat-name-2">&nbsp;</div>
+            <div class="seat-stack" id="seat-stack-2">0</div>
+            <div class="seat-status" id="seat-status-2"></div>
+          </div>
+          <div class="seat-bet hidden" id="seat-bet-2"></div>
+        </div>
+        <div class="seat" data-seat="3" id="seat-3">
+          <div class="seat-cards" id="seat-cards-3"></div>
+          <div class="seat-box">
+            <div class="seat-name" id="seat-name-3">&nbsp;</div>
+            <div class="seat-stack" id="seat-stack-3">0</div>
+            <div class="seat-status" id="seat-status-3"></div>
+          </div>
+          <div class="seat-bet hidden" id="seat-bet-3"></div>
+        </div>
+        <div class="seat" data-seat="4" id="seat-4">
+          <div class="seat-cards" id="seat-cards-4"></div>
+          <div class="seat-box">
+            <div class="seat-name" id="seat-name-4">&nbsp;</div>
+            <div class="seat-stack" id="seat-stack-4">0</div>
+            <div class="seat-status" id="seat-status-4"></div>
+          </div>
+          <div class="seat-bet hidden" id="seat-bet-4"></div>
+        </div>
+        <div class="seat" data-seat="5" id="seat-5">
+          <div class="seat-cards" id="seat-cards-5"></div>
+          <div class="seat-box">
+            <div class="seat-name" id="seat-name-5">&nbsp;</div>
+            <div class="seat-stack" id="seat-stack-5">0</div>
+            <div class="seat-status" id="seat-status-5"></div>
+          </div>
+          <div class="seat-bet hidden" id="seat-bet-5"></div>
+        </div>
+      </div>
+
+      <div class="winner-banner hidden" id="winner-banner"></div>
+    </main>
+
+    <footer class="action-bar hidden" id="online-action-bar">
+      <div class="my-cards" id="my-cards"></div>
+
+      <div class="controls">
+        <div class="action-buttons">
+          <button class="action-btn fold" id="btn-fold">Fold</button>
+          <button class="action-btn check-call" id="btn-check-call">Check</button>
+          <button class="action-btn bet-raise" id="btn-bet-raise">Bet</button>
+          <button class="action-btn allin" id="btn-allin">All-in</button>
+        </div>
+        <div class="bet-controls hidden" id="bet-controls">
+          <input type="range" id="bet-slider" min="0" max="100" value="0" step="1">
+          <div class="bet-amount-display" id="bet-amount-display">0</div>
+          <div class="presets">
+            <button class="preset-btn" data-preset="min">Min</button>
+            <button class="preset-btn" data-preset="half">&frac12; Pot</button>
+            <button class="preset-btn" data-preset="pot">Pot</button>
+            <button class="preset-btn" data-preset="max">Max</button>
+          </div>
+          <button class="btn btn-gold" id="btn-confirm-bet">Confirm</button>
+        </div>
+      </div>
+    </footer>
+  </div>
+
+  <div class="modal hidden" id="how-to-play-modal">
+    <div class="modal-content">
+      <h2>How to Play &mdash; Texas Hold&rsquo;em</h2>
+      <p>Each hand you and the other players at the table get two private hole cards. Five
+        community cards are dealt face up in the middle across four rounds of betting:
+        <b>preflop</b>, <b>flop</b> (3 cards), <b>turn</b> (1 card), and <b>river</b> (1 card).
+        Make the best five-card hand from your two hole cards and the five community cards.</p>
+      <h4>Betting</h4>
+      <ul>
+        <li><b>Fold</b> &mdash; give up the hand.</li>
+        <li><b>Check</b> &mdash; pass, only when no bet faces you.</li>
+        <li><b>Call</b> &mdash; match the current bet.</li>
+        <li><b>Bet / Raise</b> &mdash; use the slider or presets, then confirm.</li>
+        <li><b>All-in</b> &mdash; push your entire stack.</li>
+      </ul>
+      <p>Two players (small &amp; big blind) post forced bets before cards are dealt. If a player
+        goes all-in for less than others have staked, extra chips form a side pot that only the
+        larger stacks compete for. If you don't act within the time limit, the game checks for
+        you when possible, otherwise it folds your hand.</p>
+      <h4>Hand rankings (best to worst)</h4>
+      <div class="hand-rank-list">
+        <div>1. Royal / Straight Flush</div>
+        <div>2. Four of a Kind</div>
+        <div>3. Full House</div>
+        <div>4. Flush</div>
+        <div>5. Straight</div>
+        <div>6. Three of a Kind</div>
+        <div>7. Two Pair</div>
+        <div>8. One Pair</div>
+        <div>9. High Card</div>
+      </div>
+      <button class="btn btn-gold modal-close" id="btn-close-modal">Got it</button>
+    </div>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="js/deck.js"></script>
+  <script src="js/evaluator.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/online/onlineMain.js"></script>
+</body>
+</html>
