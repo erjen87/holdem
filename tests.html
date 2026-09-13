@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Hold'em Royale &mdash; Engine Tests</title>
+<style>
+  body { font-family: Consolas, "Courier New", monospace; background: #10131a; color: #e8e8e8; padding: 24px; }
+  h1 { color: #d4af37; }
+  .pass { color: #5fd68b; }
+  .fail { color: #ff6b6b; font-weight: bold; }
+  #summary { margin-top: 16px; font-size: 1.1rem; }
+  li { margin: 3px 0; }
+</style>
+</head>
+<body>
+  <h1>Engine Test Suite</h1>
+  <ul id="results"></ul>
+  <div id="summary"></div>
+
+  <script src="js/deck.js"></script>
+  <script src="js/evaluator.js"></script>
+  <script src="js/game.js"></script>
+  <script>
+    const results = document.getElementById("results");
+    let pass = 0, fail = 0;
+
+    function card(str) {
+      // e.g. "As" "Td" "9h"
+      const rankPart = str.slice(0, -1);
+      const suit = str.slice(-1);
+      const map = { J: 11, Q: 12, K: 13, A: 14, T: 10 };
+      const r = map[rankPart] || Number(rankPart);
+      return { r, s: suit, id: (map[rankPart] ? rankPart : r) + suit };
+    }
+    function cards(strs) { return strs.map(card); }
+
+    function assert(name, cond) {
+      const li = document.createElement("li");
+      if (cond) { li.className = "pass"; li.textContent = "PASS: " + name; pass++; }
+      else { li.className = "fail"; li.textContent = "FAIL: " + name; fail++; }
+      results.appendChild(li);
+      return cond;
+    }
+
+    function assertEqual(name, actual, expected) {
+      const ok = JSON.stringify(actual) === JSON.stringify(expected);
+      assert(name + " (got " + JSON.stringify(actual) + ", expected " + JSON.stringify(expected) + ")", ok);
+    }
+
+    const Ev = Poker.Evaluator;
+
+    // --- Category detection ---
+    assertEqual("Royal flush category",
+      Ev.evaluate5(cards(["As","Ks","Qs","Js","Ts"])).cat, 8);
+
+    assertEqual("Wheel straight flush (A-2-3-4-5) category",
+      Ev.evaluate5(cards(["Ah","2h","3h","4h","5h"])).cat, 8);
+    assertEqual("Wheel straight flush high card is 5",
+      Ev.evaluate5(cards(["Ah","2h","3h","4h","5h"])).tiebreak[0], 5);
+
+    assertEqual("Four of a kind category",
+      Ev.evaluate5(cards(["9s","9h","9d","9c","2c"])).cat, 7);
+
+    assertEqual("Full house category",
+      Ev.evaluate5(cards(["Ks","Kh","Kd","2c","2s"])).cat, 6);
+
+    assertEqual("Flush category",
+      Ev.evaluate5(cards(["2s","5s","9s","Js","Ks"])).cat, 5);
+
+    assertEqual("Straight category (broadway)",
+      Ev.evaluate5(cards(["Ts","Jh","Qd","Kc","As"])).cat, 4);
+
+    assertEqual("Non-flush non-straight wheel is just high card",
+      Ev.evaluate5(cards(["Ah","2c","3d","4h","6s"])).cat, 0);
+
+    assertEqual("Trips category",
+      Ev.evaluate5(cards(["7s","7h","7d","2c","9s"])).cat, 3);
+
+    assertEqual("Two pair category",
+      Ev.evaluate5(cards(["7s","7h","4d","4c","9s"])).cat, 2);
+
+    assertEqual("One pair category",
+      Ev.evaluate5(cards(["7s","7h","4d","3c","9s"])).cat, 1);
+
+    assertEqual("High card category",
+      Ev.evaluate5(cards(["2s","5h","9d","Jc","Ks"])).cat, 0);
+
+    // --- Comparisons ---
+    assert("Straight flush beats four of a kind",
+      Ev.compareEval(Ev.evaluate5(cards(["9s","8s","7s","6s","5s"])), Ev.evaluate5(cards(["Ah","Ad","Ac","As","2c"]))) > 0);
+
+    assert("Higher full house beats lower full house",
+      Ev.compareEval(Ev.evaluate5(cards(["Ks","Kh","Kd","2c","2s"])), Ev.evaluate5(cards(["Qs","Qh","Qd","Ac","As"]))) > 0);
+
+    assert("Full house trips-rank matters over pair-rank",
+      Ev.compareEval(Ev.evaluate5(cards(["3s","3h","3d","Ac","As"])), Ev.evaluate5(cards(["2s","2h","2d","Kc","Ks"]))) > 0);
+
+    assert("Flush compares by highest kicker",
+      Ev.compareEval(Ev.evaluate5(cards(["2s","5s","9s","Js","Ks"])), Ev.evaluate5(cards(["2s","5s","9s","Js","Qs"]))) > 0);
+
+    assert("Two pair: higher top pair wins even with lower kicker",
+      Ev.compareEval(Ev.evaluate5(cards(["9s","9h","4d","4c","2s"])), Ev.evaluate5(cards(["8s","8h","7d","7c","Ac"]))) > 0);
+
+    assert("One pair: kicker breaks tie",
+      Ev.compareEval(Ev.evaluate5(cards(["7s","7h","Kd","4c","2s"])), Ev.evaluate5(cards(["7d","7c","Qd","4h","2h"]))) > 0);
+
+    assert("Identical hands tie (compareEval == 0)",
+      Ev.compareEval(Ev.evaluate5(cards(["7s","7h","Kd","4c","2s"])), Ev.evaluate5(cards(["7d","7c","Kh","4h","2h"]))) === 0);
+
+    assert("Ace-high straight beats king-high straight",
+      Ev.compareEval(Ev.evaluate5(cards(["Ts","Jh","Qd","Kc","As"])), Ev.evaluate5(cards(["9s","Th","Jd","Qc","Ks"]))) > 0);
+
+    assert("Six-high straight beats wheel (five-high) straight",
+      Ev.compareEval(Ev.evaluate5(cards(["2s","3h","4d","5c","6s"])), Ev.evaluate5(cards(["Ah","2h","3d","4c","5s"]))) > 0);
+
+    // --- 7-card best-hand selection ---
+    (function () {
+      const hole = cards(["Ah","Kh"]);
+      const community = cards(["Qh","Jh","Th","2c","3d"]);
+      const best = Ev.evaluateBest(hole.concat(community));
+      assertEqual("7-card eval finds royal flush from 7 cards", best.cat, 8);
+      assertEqual("7-card eval royal flush high card", best.tiebreak[0], 14);
+    })();
+
+    (function () {
+      // Board plays: both players use the board's straight, tie expected.
+      const community = cards(["5s","6h","7d","8c","9s"]);
+      const p1 = Ev.evaluateBest(cards(["2c","2d"]).concat(community));
+      const p2 = Ev.evaluateBest(cards(["3c","3h"]).concat(community));
+      assert("Board straight plays over inferior kickers -> tie", Ev.compareEval(p1, p2) === 0);
+    })();
+
+    (function () {
+      // Best hand must ignore a weaker pair when a better 5-card combo exists.
+      const hole = cards(["2s","2h"]);
+      const community = cards(["2d","5c","5h","9s","Kd"]);
+      const best = Ev.evaluateBest(hole.concat(community));
+      assertEqual("Full house found among 7 cards (trips+pair)", best.cat, 6);
+    })();
+
+    // --- Side pot / pot-splitting math ---
+    (function () {
+      const players = [
+        { id: 0, totalContributed: 100, folded: false },
+        { id: 1, totalContributed: 300, folded: false },
+        { id: 2, totalContributed: 300, folded: true },
+        { id: 3, totalContributed: 500, folded: false }
+      ];
+      const pots = Poker.computePots(players);
+      const total = pots.reduce((s, p) => s + p.amount, 0);
+      assertEqual("Side pots sum to total contributed", total, 1200);
+      assertEqual("Main pot amount (100 x 4)", pots[0].amount, 400);
+      assertEqual("Main pot eligible = everyone not folded", pots[0].eligible.sort(), [0,1,3]);
+      assertEqual("Second layer amount (200 x 3, players 1/2/3)", pots[1].amount, 600);
+      assertEqual("Second layer eligible excludes folded player 2", pots[1].eligible.sort(), [1,3]);
+      assertEqual("Third layer amount (200 x 1, player 3 only)", pots[2].amount, 200);
+      assertEqual("Third layer eligible is just player 3", pots[2].eligible, [3]);
+    })();
+
+    document.getElementById("summary").innerHTML =
+      `<span class="${fail === 0 ? 'pass' : 'fail'}">` +
+      `${pass} passed, ${fail} failed</span>`;
+  </script>
+</body>
+</html>

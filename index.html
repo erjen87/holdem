@@ -2,26 +2,157 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Hello</title>
-<style>
-  html, body {
-    height: 100%;
-    margin: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: #111827;
-    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
-  }
-  h1 {
-    color: #f9fafb;
-    font-size: 3rem;
-    letter-spacing: 0.02em;
-  }
-</style>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>Hold'em Royale</title>
+<link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
-  <h1>Hello, world!</h1>
+  <div class="app">
+    <header class="topbar">
+      <div class="brand">&#9824; Hold&rsquo;em <span class="gold">Royale</span></div>
+      <div class="topbar-actions">
+        <button class="btn" id="btn-how-to-play">How to Play</button>
+        <button class="btn" id="btn-next-hand" disabled>Next Hand</button>
+        <button class="btn btn-gold" id="btn-new-game">New Game</button>
+      </div>
+    </header>
+
+    <main class="table-area">
+      <div class="table-oval" id="table-oval">
+        <div class="rail"></div>
+        <div class="felt"></div>
+
+        <div class="center-area">
+          <div class="stage-label" id="stage-label">Preflop</div>
+          <div class="community-cards" id="community-cards"></div>
+          <div class="pot-display" id="pot-display">Pot: 0</div>
+        </div>
+
+        <div class="dealer-chip" id="dealer-chip" style="display:none;">D</div>
+
+        <div class="seat" data-seat="0" id="seat-0">
+          <div class="seat-cards" id="seat-cards-0"></div>
+          <div class="seat-box">
+            <div class="seat-name">You</div>
+            <div class="seat-stack" id="seat-stack-0">10,000</div>
+            <div class="seat-status" id="seat-status-0"></div>
+          </div>
+          <div class="seat-bet hidden" id="seat-bet-0"></div>
+        </div>
+        <div class="seat" data-seat="1" id="seat-1">
+          <div class="seat-cards" id="seat-cards-1"></div>
+          <div class="seat-box">
+            <div class="seat-name">Marcus</div>
+            <div class="seat-stack" id="seat-stack-1">10,000</div>
+            <div class="seat-status" id="seat-status-1"></div>
+          </div>
+          <div class="seat-bet hidden" id="seat-bet-1"></div>
+        </div>
+        <div class="seat" data-seat="2" id="seat-2">
+          <div class="seat-cards" id="seat-cards-2"></div>
+          <div class="seat-box">
+            <div class="seat-name">Priya</div>
+            <div class="seat-stack" id="seat-stack-2">10,000</div>
+            <div class="seat-status" id="seat-status-2"></div>
+          </div>
+          <div class="seat-bet hidden" id="seat-bet-2"></div>
+        </div>
+        <div class="seat" data-seat="3" id="seat-3">
+          <div class="seat-cards" id="seat-cards-3"></div>
+          <div class="seat-box">
+            <div class="seat-name">Sofia</div>
+            <div class="seat-stack" id="seat-stack-3">10,000</div>
+            <div class="seat-status" id="seat-status-3"></div>
+          </div>
+          <div class="seat-bet hidden" id="seat-bet-3"></div>
+        </div>
+        <div class="seat" data-seat="4" id="seat-4">
+          <div class="seat-cards" id="seat-cards-4"></div>
+          <div class="seat-box">
+            <div class="seat-name">Ken</div>
+            <div class="seat-stack" id="seat-stack-4">10,000</div>
+            <div class="seat-status" id="seat-status-4"></div>
+          </div>
+          <div class="seat-bet hidden" id="seat-bet-4"></div>
+        </div>
+        <div class="seat" data-seat="5" id="seat-5">
+          <div class="seat-cards" id="seat-cards-5"></div>
+          <div class="seat-box">
+            <div class="seat-name">Diego</div>
+            <div class="seat-stack" id="seat-stack-5">10,000</div>
+            <div class="seat-status" id="seat-status-5"></div>
+          </div>
+          <div class="seat-bet hidden" id="seat-bet-5"></div>
+        </div>
+      </div>
+
+      <div class="winner-banner hidden" id="winner-banner"></div>
+    </main>
+
+    <footer class="action-bar">
+      <div class="my-cards" id="my-cards"></div>
+
+      <div class="controls">
+        <div class="action-buttons">
+          <button class="action-btn fold" id="btn-fold">Fold</button>
+          <button class="action-btn check-call" id="btn-check-call">Check</button>
+          <button class="action-btn bet-raise" id="btn-bet-raise">Bet</button>
+          <button class="action-btn allin" id="btn-allin">All-in</button>
+        </div>
+        <div class="bet-controls hidden" id="bet-controls">
+          <input type="range" id="bet-slider" min="0" max="100" value="0" step="1">
+          <div class="bet-amount-display" id="bet-amount-display">0</div>
+          <div class="presets">
+            <button class="preset-btn" data-preset="min">Min</button>
+            <button class="preset-btn" data-preset="half">&frac12; Pot</button>
+            <button class="preset-btn" data-preset="pot">Pot</button>
+            <button class="preset-btn" data-preset="max">Max</button>
+          </div>
+          <button class="btn btn-gold" id="btn-confirm-bet">Confirm</button>
+        </div>
+      </div>
+    </footer>
+  </div>
+
+  <div class="modal hidden" id="how-to-play-modal">
+    <div class="modal-content">
+      <h2>How to Play &mdash; Texas Hold&rsquo;em</h2>
+      <p>Each hand you and five computer opponents get two private hole cards. Five community
+        cards are dealt face up in the middle across four rounds of betting: <b>preflop</b>,
+        <b>flop</b> (3 cards), <b>turn</b> (1 card), and <b>river</b> (1 card). Make the best
+        five-card hand from your two hole cards and the five community cards.</p>
+      <h4>Betting</h4>
+      <ul>
+        <li><b>Fold</b> &mdash; give up the hand.</li>
+        <li><b>Check</b> &mdash; pass, only when no bet faces you.</li>
+        <li><b>Call</b> &mdash; match the current bet.</li>
+        <li><b>Bet / Raise</b> &mdash; use the slider or presets, then confirm.</li>
+        <li><b>All-in</b> &mdash; push your entire stack.</li>
+      </ul>
+      <p>Two players (small &amp; big blind) post forced bets before cards are dealt. If a player
+        goes all-in for less than others have staked, extra chips form a side pot that only the
+        larger stacks compete for.</p>
+      <h4>Hand rankings (best to worst)</h4>
+      <div class="hand-rank-list">
+        <div>1. Royal / Straight Flush</div>
+        <div>2. Four of a Kind</div>
+        <div>3. Full House</div>
+        <div>4. Flush</div>
+        <div>5. Straight</div>
+        <div>6. Three of a Kind</div>
+        <div>7. Two Pair</div>
+        <div>8. One Pair</div>
+        <div>9. High Card</div>
+      </div>
+      <button class="btn btn-gold modal-close" id="btn-close-modal">Got it</button>
+    </div>
+  </div>
+
+  <script src="js/deck.js"></script>
+  <script src="js/evaluator.js"></script>
+  <script src="js/ai.js"></script>
+  <script src="js/game.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/main.js"></script>
 </body>
 </html>
